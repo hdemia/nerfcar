@@ -1,176 +1,28 @@
 <html lang="en">
     <head>
         <title>Arduino Mover</title>
-        <style>
-            div#cosino {
-                display: block;
-                width: 100px;
-                height: 100px;
-                background: url(https://www.clipartmax.com/png/small/42-422007_preview-top-down-tank-png.png) center center no-repeat;
-                background-size: contain;
-            }
-
-            body {
-                display: flex;
-                margin: 0;
-                justify-content: center;
-                align-items: center;
-            }
-
-            h1 {
-                position: absolute;
-                top: 10px;
-                left: 50%;
-                transform: translateX(-50%);
-            }
-
-            p {
-                display: block;
-                width: 300px;
-                position: absolute;
-                right: 30px;
-                bottom: 15px;
-                padding: 15px;
-                background: #ccc;
-                border-radius: 5px;
-                box-shadow: 5px 5px 15px;
-                border: 1px solid #000;
-            }
-
-            .error_bad::after {
-                content: "Network Error";
-                position: relative;
-                top: -20px;
-                color: #f00;
-                font-weight: 900;
-                font-family: arial;
-                text-transform: uppercase;
-                width: 200px;
-                display: block;
-                left: -21px;
-            }
-
-
-
-            .state_arrowUp {
-                animation-name: arrowUp;
-                animation-duration: 3s;
-            }
-            @keyframes arrowUp {
-                0% { transform: translateY(0) }
-                99% { transform: translateY(-100px) }
-                100% { transform: translateY(0) }
-            }
-            .state_arrowDown {
-                animation-name: arrowDown;
-                animation-duration: 3s;
-            }
-            @keyframes arrowDown {
-                0% { transform: translateY(0) }
-                99% { transform: translateY(100px) }
-                100% { transform: translateY(0) }
-            }
-            .state_arrowLeft {
-                animation-name: arrowLeft;
-                animation-duration: 3s;
-            }
-            @keyframes arrowLeft {
-                0% { transform: translateX(0) }
-                99% { transform: translateX(-100px) }
-                100% { transform: translateX(0) }
-            }
-            .state_arrowRight {
-                animation-name: arrowRight;
-                animation-duration: 3s;
-            }
-            @keyframes arrowRight {
-                0% { transform: translateX(0) }
-                99% { transform: translateX(100px) }
-                100% { transform: translateX(0) }
-            }
-
-        </style>
+        <link rel="stylesheet" href="style.css" />
     </head>
     <body>
         <h1>Arduino mover</h1>
-        <p>Usa le frecce per muovere il cosino<br/>
-        Usa la barra spaziatrice per sparare. <input id="input" placeholder="ip" type="text" value="192.168.31.153"/></p>
+        <p>
+            Usa le frecce per muovere il cosino.<br/>
+            Usa la barra spaziatrice per sparare.<br/><br/>
+            IP cosino: <input id="input" placeholder="ip" type="text" value="192.168.31.153"/><br/>
+            Attiva comunicazione: <input id="active" type="checkbox" checked/> 
+        </p>
 
-        <div id="cosino">
+        <div id="cosino"></div>
 
-        </div>
+        <ul id="tastierino">
+            <li id="ArrowUp"></li>
+            <li id="ArrowLeft"></li>
+            <li id="ArrowDown"></li>
+            <li id="ArrowRight"></li>
+            <li id="space"></li>
+        </ul>
 
-        <script>
-
-            document.addEventListener("keydown", onKeyDown);
-            document.addEventListener("keyup", onKeyUp);
-
-            const cosino = document.getElementById("cosino");
-            const map = {
-                "ArrowDown": "backward",
-                "ArrowUp": "forward",
-                "ArrowLeft": "left",
-                "ArrowRight": "right",
-                "space": "shoot"
-            }
-            function url(key) { 
-                const kn = map[key];
-                if (typeof(kn) == "undefined") {
-                    throw new Error("invalid key");
-                }
-                return "http://" + document.getElementById("input").value    + ":8080/jolly/" + map[key] + "/"; 
-            }
-
-            let activeProc = null;
-            let activeKey = null;
-
-            function onKeyDown(evt) {
-                let key = evt.key;
-                if (key == " ") key = "space";
-
-                if (activeKey == key) return; //niente da fare qua
-                if (activeKey != null) {
-                    onKeyUp(key);
-                }
-
-                activeKey = key;
-                handleEvent(key);
-                if (key != "space") {
-                    activeProc = window.setInterval(function s() { handleEvent(key) }, 1000);
-                }
-                cosino.classList.add("state_" + key);
-            }   
-
-            function onKeyUp(evt) {
-                let key = evt.key;
-                if (key == " ") key = "space";
-
-                //smetti di richiamare handleEvent ogni 100ms
-                window.clearInterval(activeProc);
-                cosino.classList.remove("state_" + key);
-                activeKey = null;
-            }
-
-            async function handleEvent(key) {
-                if (key == "undefined") {
-                    window.clearInterval(this);
-                    return;
-                }
-                if (activeKey != key) {
-                    window.clearInterval(this);
-                    return;
-                }
-                try {
-                    const ur = url(key);
-                    await fetch(ur);
-                    console.log(ur)
-                    cosino.classList.remove("error_bad");
-                } catch (error) {
-                    cosino.classList.add("error_bad");
-                }
-            }
-
-        </script>
+        <script src="logic.js"></script>
     </body>
 </html>
 
